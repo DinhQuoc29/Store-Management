@@ -1,0 +1,207 @@
+<div class="page-container page-container--products">
+
+  <!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Sản phẩm</h1>
+      <p class="page-subtitle">{{ totalElements() }} sản phẩm trong kho</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreate()">
+      <span>＋</span> Thêm mới
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════ TOOLBAR: SEARCH ═══════════════════════════════════ -->
+  <div class="toolbar">
+    <!-- Search -->
+    <div class="search-bar">
+      <span class="search-bar__icon">🔍</span>
+      <input
+        id="product-search"
+        type="text"
+        class="search-bar__input"
+        placeholder="Tìm kiếm theo tên hoặc mã sản phẩm..."
+        [ngModel]="keyword()"
+        (ngModelChange)="onSearch($event)" />
+      @if (keyword()) {
+        <button class="search-clear-btn" (click)="onSearch('')" title="Xóa tìm kiếm">✕</button>
+      }
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════ TABLE CARD ═══════════════════════════════ -->
+  <div class="table-card">
+
+    <!-- Skeleton loading -->
+    @if (loading()) {
+      <div class="skeleton-rows">
+        @for (_ of [1,2,3,4,5,6]; track $index) {
+          <div class="skeleton-row">
+            <div class="skeleton skeleton-col-stt"></div>
+            <div class="skeleton skeleton-col-img"></div>
+            <div class="skeleton skeleton-col-code"></div>
+            <div class="skeleton skeleton-col-name"></div>
+            <div class="skeleton skeleton-col-action"></div>
+          </div>
+        }
+      </div>
+    }
+
+    <!-- Table -->
+    @if (!loading()) {
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-stt">STT</th>
+              <th class="col-img">Hình ảnh</th>
+              <th class="col-code">Mã SP</th>
+              <th class="col-name">Tên sản phẩm</th>
+              <th class="col-action">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            @if (products().length === 0) {
+              <tr>
+                <td colspan="5" class="empty-cell">
+                  <div class="empty-state">
+                    <div class="empty-state__icon">
+                      <img src="/icons/product.png" alt="Sản phẩm" class="empty-state__img" />
+                    </div>
+                    <p class="empty-state__title">Không tìm thấy sản phẩm</p>
+                    <p class="empty-state__desc">Thử tìm kiếm với từ khóa khác hoặc thêm sản phẩm mới</p>
+                    <button class="btn btn--primary" (click)="openCreate()">＋ Thêm sản phẩm</button>
+                  </div>
+                </td>
+              </tr>
+            }
+
+            @for (p of products(); track p.id; let i = $index) {
+              <tr class="data-row">
+                <!-- STT -->
+                <td class="col-stt">
+                  <span class="row-index">{{ currentPage() * pageSize + i + 1 }}</span>
+                </td>
+
+                <!-- Thumbnail -->
+                <td class="col-img">
+                  <div class="product-thumb">
+                    @if (p.imageUrl) {
+                      <img [src]="p.imageUrl" [alt]="p.productName" class="thumb-img" loading="lazy"
+                           (error)="$any($event.target).style.display='none'" />
+                    }
+                  </div>
+                </td>
+
+                <!-- Mã SP -->
+                <td class="col-code">
+                  <span class="product-code-text">{{ p.productCode }}</span>
+                </td>
+
+                <!-- Tên SP -->
+                <td class="col-name">
+                  <span class="product-name-text">{{ p.productName }}</span>
+                </td>
+
+                <!-- Thao tác -->
+                <td class="col-action">
+                  <div class="action-group">
+                    <button class="btn btn--icon" (click)="openEdit(p)" title="Chỉnh sửa">
+                      <img src="/icons/edit.png" alt="Chỉnh sửa" class="action-icon-img" />
+                    </button>
+                    <button class="btn btn--icon btn--icon-danger" (click)="confirmDelete(p.id)" title="Xóa">
+                      <img src="/icons/bin.png" alt="Xóa" class="action-icon-img" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button class="btn btn--ghost"
+            [disabled]="currentPage() === 0"
+            (click)="changePage(currentPage() - 1)">‹</button>
+
+          @for (p of pages(); track p) {
+            <button class="btn btn--ghost"
+              [class.pagination__btn--active]="currentPage() === p"
+              (click)="changePage(p)">{{ p + 1 }}</button>
+          }
+
+          <button class="btn btn--ghost"
+            [disabled]="currentPage() >= totalPages() - 1"
+            (click)="changePage(currentPage() + 1)">›</button>
+        </div>
+      }
+    }
+  </div>
+
+</div>
+
+<!-- ═══════════════════════════════════ CREATE / EDIT MODAL ═══════════════════════════════════ -->
+@if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">{{ modalTitle() }}</h2>
+        <button class="btn btn--icon" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal__body">
+
+        <!-- Tên sản phẩm -->
+        <div class="form-group" [class.form-group--error]="formErrors()['productName']">
+          <label class="form-label" for="form-product-name">Tên sản phẩm *</label>
+          <input
+            id="form-product-name"
+            class="form-input"
+            type="text"
+            placeholder="Áo hoodie unisex Hàn Quốc form rộng..."
+            [ngModel]="formName()"
+            (ngModelChange)="formName.set($event)" />
+          @if (formErrors()['productName']) {
+            <span class="form-error">{{ formErrors()['productName'] }}</span>
+          }
+        </div>
+
+        <!-- URL hình ảnh -->
+        <div class="form-group">
+          <label class="form-label" for="form-product-img">URL hình ảnh</label>
+          <input
+            id="form-product-img"
+            class="form-input"
+            type="url"
+            placeholder="https://images.unsplash.com/..."
+            [ngModel]="formImageUrl()"
+            (ngModelChange)="formImageUrl.set($event)" />
+          @if (formImageUrl()) {
+            <div class="preview-wrap">
+              <img [src]="formImageUrl()" alt="Preview" class="img-preview" (error)="$any($event.target).style.display='none'" />
+              <span class="preview-label">Xem trước hình ảnh</span>
+            </div>
+          }
+        </div>
+
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" (click)="closeModal()">Hủy</button>
+        <button class="btn btn--primary" (click)="submit()" [disabled]="submitting()">
+          @if (submitting()) { <span class="spinner"></span> } {{ isEditing() ? 'Cập nhật' : 'Thêm mới' }}
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Confirm Delete Dialog -->
+@if (deletingId()) {
+  <app-confirm-dialog
+    [message]="'Xác nhận xóa sản phẩm ' + deletingCode() + '? Hành động này không thể hoàn tác.'"
+    (confirmed)="doDelete()"
+    (cancelled)="cancelDelete()">
+  </app-confirm-dialog>
+}

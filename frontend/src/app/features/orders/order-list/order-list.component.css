@@ -1,0 +1,273 @@
+/* Order List — Clean Admin Table */
+
+.page-container--orders {
+  max-width: 1280px !important;
+  margin: 0 auto;
+}
+
+/* ─── Header ─── */
+.list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+/* ─── Search & Filter Row ─── */
+.search-row {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+  align-items: center;
+}
+
+.filter-toggle {
+  position: relative;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.filter-btn-note {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font-size: var(--font-size-sm);
+  transition: all var(--transition-fast);
+}
+
+.filter-btn-note--active {
+  background: #fef3c7;
+  color: #92400e;
+  border-color: #fcd34d;
+  font-weight: 600;
+}
+
+.filter-toggle--active {
+  background: var(--blue-50);
+  color: var(--blue-600);
+  border-color: var(--blue-100);
+}
+
+.filter-dot {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  width: 7px;
+  height: 7px;
+  background: var(--red-700);
+  border-radius: 50%;
+  border: 1.5px solid #FFFFFF;
+}
+
+/* ─── Filter Panel ─── */
+.filter-panel {
+  background: #FFFFFF;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  animation: slideDown 0.15s ease;
+}
+
+.filter-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filter-label {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.form-select { cursor: pointer; }
+
+.filter-actions {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+/* ─── Skeleton Loading ─── */
+.skeleton-rows { display: flex; flex-direction: column; }
+
+.skeleton-row {
+  display: grid;
+  grid-template-columns: 70px 95px 1fr 130px 130px 70px 80px 110px 110px 70px;
+  gap: var(--space-3);
+  align-items: center;
+  padding: 12px var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.skeleton-col-id       { height: 18px; width: 50px; }
+.skeleton-col-date     { height: 16px; width: 86px; }
+.skeleton-col-customer { height: 16px; width: 70%; }
+.skeleton-col-note     { height: 16px; width: 100px; }
+.skeleton-col-amount   { height: 16px; width: 110px; margin-left: auto; }
+.skeleton-col-qty      { height: 20px; width: 50px; border-radius: var(--radius-full); margin-left: auto; }
+.skeleton-col-status   { height: 22px; width: 82px; border-radius: var(--radius-full); }
+.skeleton-col-action   { height: 28px; width: 58px; border-radius: var(--radius-md); margin: 0 auto; }
+
+/* ─── Table Columns ─── */
+.col-id       { width: 70px; }
+.col-date     { width: 95px; white-space: nowrap; }
+.col-customer { width: auto; min-width: 140px; }
+.col-note     { width: 140px; max-width: 170px; }
+.col-amount   { width: 130px; }
+.col-qty      { width: 75px; }
+.col-payment  { width: 115px; }
+.col-shipping { width: 115px; }
+.col-action   { width: 70px; text-align: center; }
+th.col-action { text-align: center; }
+
+.order-note-text {
+  display: inline-block;
+  font-size: 12px;
+  color: #78350f;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: var(--radius-sm);
+  padding: 2px 7px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
+  vertical-align: middle;
+}
+
+.order-note-empty {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  padding-left: 6px;
+}
+
+.num-col   { text-align: right; }
+th.num-col { text-align: right; }
+
+/* ─── Table Row ─── */
+.data-row {
+  border-left: 3px solid transparent;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.row--paid { border-left-color: var(--green-700); }
+
+/* ─── Cell Content ─── */
+.order-id {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--blue-600);
+}
+
+.order-date {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* Customer */
+.customer-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.customer-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.customer-phone {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  font-weight: 400;
+}
+
+/* Remaining amount */
+.remaining-text {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--red-700);
+}
+
+.remaining--paid {
+  color: var(--green-700);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Quantity cells */
+.qty-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.qty-picked {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+}
+
+.qty-picked--full    { background: #DCFCE7; color: #15803D; }
+.qty-picked--partial { background: #FEF3C7; color: #B45309; }
+.qty-picked--none    { background: #FEE2E2; color: #BE123C; }
+
+/* Action buttons */
+.action-group {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.btn-view,
+.btn-delete {
+  border: none;
+  background: transparent;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: var(--radius-md);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  text-decoration: none;
+}
+
+.btn-view:hover   { background: var(--bg-hover); }
+.btn-delete:hover { background: var(--red-100); }
+
+.action-icon-img {
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  display: block;
+}
+
+/* Empty */
+.empty-state { text-align: center; padding: var(--space-16) var(--space-6); }
+.empty-state__icon  { font-size: 40px; margin-bottom: var(--space-3); }
+.empty-state__title { font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-2); color: var(--color-text-primary); }
+.empty-state__desc  { color: var(--color-text-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-5); }

@@ -1,0 +1,234 @@
+<div class="page-container page-container--orders">
+  <!-- Header -->
+  <div class="page-header list-header">
+    <div>
+      <h1 class="page-title">Đơn hàng</h1>
+      <p class="page-subtitle">{{ totalElements() }} đơn hàng</p>
+    </div>
+    <a routerLink="/orders/new" class="btn btn--primary">+ Tạo đơn</a>
+  </div>
+
+  <!-- Search + filter toggle -->
+  <div class="search-row">
+    <div class="search-bar">
+      <span class="search-bar__icon">🔍</span>
+      <input type="text" class="search-bar__input" placeholder="Tìm khách hàng, SĐT..."
+        [ngModel]="keyword()" (ngModelChange)="keyword.set($event)" (keydown.enter)="search()" />
+    </div>
+    <button class="btn btn--ghost filter-btn-note"
+            [class.filter-btn-note--active]="filterHasNote() === true"
+            (click)="toggleHasNote()"
+            title="Lọc đơn có ghi chú">
+      📝 Có ghi chú
+    </button>
+    <button class="btn btn--ghost filter-toggle" [class.filter-toggle--active]="showFilters()" (click)="toggleFilters()">
+      ⚙️ Lọc @if (hasActiveFilters()) { <span class="filter-dot"></span> }
+    </button>
+  </div>
+
+  <!-- Filter panel -->
+  @if (showFilters()) {
+    <div class="filter-panel">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="filter-label">Nhặt hàng</label>
+          <select class="form-input form-select" [ngModel]="filterPickup()" (ngModelChange)="filterPickup.set($event)">
+            <option value="">Tất cả</option>
+            @for (o of pickupOptions; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Thanh toán</label>
+          <select class="form-input form-select" [ngModel]="filterPayment()" (ngModelChange)="filterPayment.set($event)">
+            <option value="">Tất cả</option>
+            @for (o of paymentOptions; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Vận chuyển</label>
+          <select class="form-input form-select" [ngModel]="filterShipping()" (ngModelChange)="filterShipping.set($event)">
+            <option value="">Tất cả</option>
+            @for (o of shippingOptions; track o.value) { <option [value]="o.value">{{ o.label }}</option> }
+          </select>
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Ghi chú</label>
+          <select class="form-input form-select" [ngModel]="filterHasNote()" (ngModelChange)="filterHasNote.set($event)">
+            <option value="">Tất cả</option>
+            <option [ngValue]="true">Có ghi chú</option>
+            <option [ngValue]="false">Không có ghi chú</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-row">
+        <div class="filter-group">
+          <label class="filter-label">Từ ngày</label>
+          <input class="form-input" type="date" [ngModel]="filterFrom()" (ngModelChange)="filterFrom.set($event)" />
+        </div>
+        <div class="filter-group">
+          <label class="filter-label">Đến ngày</label>
+          <input class="form-input" type="date" [ngModel]="filterTo()" (ngModelChange)="filterTo.set($event)" />
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn--ghost btn-sm" (click)="clearFilters()" [disabled]="!hasActiveFilters()">🗑️ Xóa lọc</button>
+        <button class="btn btn--primary btn-sm" (click)="search()">Tìm kiếm</button>
+      </div>
+    </div>
+  }
+
+  <!-- Loading skeleton -->
+  @if (loading()) {
+    <div class="table-card">
+      <div class="skeleton-rows">
+        @for (i of [1,2,3,4,5,6,7]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton skeleton-col-id"></div>
+            <div class="skeleton skeleton-col-date"></div>
+            <div class="skeleton skeleton-col-customer"></div>
+            <div class="skeleton skeleton-col-note"></div>
+            <div class="skeleton skeleton-col-amount"></div>
+            <div class="skeleton skeleton-col-qty"></div>
+            <div class="skeleton skeleton-col-qty"></div>
+            <div class="skeleton skeleton-col-status"></div>
+            <div class="skeleton skeleton-col-status"></div>
+            <div class="skeleton skeleton-col-action"></div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- Empty -->
+  @if (!loading() && orders().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">📋</div>
+      <h2 class="empty-state__title">Không có đơn hàng</h2>
+      <p class="empty-state__desc">{{ hasActiveFilters() ? 'Không có đơn hàng phù hợp với bộ lọc' : 'Tạo đơn hàng đầu tiên của bạn' }}</p>
+      @if (!hasActiveFilters()) { <a routerLink="/orders/new" class="btn btn--primary">+ Tạo đơn hàng</a> }
+    </div>
+  }
+
+  <!-- Order Table -->
+  @if (!loading() && orders().length > 0) {
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-id">Mã đơn</th>
+              <th class="col-date">Ngày</th>
+              <th class="col-customer">Khách hàng</th>
+              <th class="col-note">Ghi chú</th>
+              <th class="col-amount num-col">Tiền phải trả</th>
+              <th class="col-qty num-col">SL đặt</th>
+              <th class="col-qty num-col">SL đã lấy</th>
+              <th class="col-payment">Thanh toán</th>
+              <th class="col-shipping">Vận chuyển</th>
+              <th class="col-action">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (o of orders(); track o.id) {
+              <tr class="data-row" [class.row--paid]="o.remainingAmount === 0"
+                  [routerLink]="['/orders', o.id]" style="cursor: pointer;">
+
+                <!-- Mã đơn -->
+                <td class="col-id">
+                  <span class="order-id">#{{ o.id }}</span>
+                </td>
+
+                <!-- Ngày -->
+                <td class="col-date">
+                  <span class="order-date">{{ o.orderDate | date:'dd/MM/yyyy' }}</span>
+                </td>
+
+                <!-- Khách hàng -->
+                <td class="col-customer">
+                  <div class="customer-info">
+                    <span class="customer-name">{{ o.customerName }}</span>
+                    @if (o.customerPhone) {
+                      <span class="customer-phone">{{ o.customerPhone }}</span>
+                    }
+                  </div>
+                </td>
+
+                <!-- Ghi chú -->
+                <td class="col-note">
+                  @if (o.note) {
+                    <span class="order-note-text" [title]="o.note">
+                      {{ o.note }}
+                    </span>
+                  } @else {
+                    <span class="order-note-empty">—</span>
+                  }
+                </td>
+
+                <!-- Số tiền phải trả -->
+                <td class="col-amount num-col">
+                  <span class="remaining-text" [class.remaining--paid]="o.remainingAmount === 0">
+                    {{ o.remainingAmount === 0 ? '✅ Đủ' : formatCurrency(o.remainingAmount) }}
+                  </span>
+                </td>
+
+                <!-- SL đặt -->
+                <td class="col-qty num-col">
+                  <span class="qty-text">{{ o.totalQuantity }}</span>
+                </td>
+
+                <!-- SL đã lấy -->
+                <td class="col-qty num-col">
+                  <span class="qty-picked"
+                    [class.qty-picked--full]="o.totalPickedQuantity >= o.totalQuantity"
+                    [class.qty-picked--partial]="o.totalPickedQuantity > 0 && o.totalPickedQuantity < o.totalQuantity"
+                    [class.qty-picked--none]="o.totalPickedQuantity === 0">
+                    {{ o.totalPickedQuantity }}/{{ o.totalQuantity }}
+                  </span>
+                </td>
+
+                <!-- Trạng thái thanh toán -->
+                <td class="col-payment">
+                  <app-status-badge [status]="o.paymentStatus" type="payment" />
+                </td>
+
+                <!-- Trạng thái vận chuyển -->
+                <td class="col-shipping">
+                  <app-status-badge [status]="o.shippingStatus" type="shipping" />
+                </td>
+
+                <!-- Thao tác -->
+                <td class="col-action" (click)="$event.stopPropagation()">
+                  <div class="action-group">
+                    <a [routerLink]="['/orders', o.id]" class="btn-view" title="Xem chi tiết">
+                      <img src="/icons/eye.png" alt="Chi tiết" class="action-icon-img" />
+                    </a>
+                    <button class="btn-delete" (click)="confirmDelete(o.id)" title="Xóa">
+                      <img src="/icons/bin.png" alt="Xóa" class="action-icon-img" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages() > 1) {
+        <div class="pagination">
+          <button class="btn btn--ghost btn-sm" [disabled]="currentPage()===0" (click)="changePage(currentPage()-1)">‹ Trước</button>
+          @for (p of pages(); track p) {
+            <button class="btn btn--ghost btn-sm" [class.pagination__btn--active]="p===currentPage()" (click)="changePage(p)">{{ p+1 }}</button>
+          }
+          <button class="btn btn--ghost btn-sm" [disabled]="currentPage()>=totalPages()-1" (click)="changePage(currentPage()+1)">Sau ›</button>
+        </div>
+      }
+    </div>
+  }
+</div>
+
+@if (deletingId()) {
+  <app-confirm-dialog
+    [message]="'Xóa ' + deletingLabel() + '? Hành động này không thể hoàn tác.'"
+    (confirmed)="doDelete()" (cancelled)="cancelDelete()" />
+}

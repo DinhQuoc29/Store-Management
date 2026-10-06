@@ -1,0 +1,273 @@
+<div class="page-container pickup-page">
+
+  <!-- ============================================================
+       HEADER — Tổng quan tiến độ gom hàng
+       ============================================================ -->
+  <header class="pickup-header">
+    <div class="pickup-header__top">
+      <div>
+        <h1 class="page-title">Gom hàng hôm nay</h1>
+        <p class="page-subtitle">
+          @if (!loading()) {
+            {{ completedCards() }}/{{ totalProductTypes() }} sản phẩm ·
+            {{ totalItemsPicked() }}/{{ totalItemsNeeded() }} items
+          } @else {
+            Đang tải...
+          }
+        </p>
+      </div>
+      <button class="btn btn--icon btn--icon-lg" (click)="loadChecklist()" title="Tải lại">
+        @if (loading()) {
+          <span class="spinner"></span>
+        } @else {
+          🔄
+        }
+      </button>
+    </div>
+
+    <!-- Overall progress bar -->
+    @if (!loading() && totalItemsNeeded() > 0) {
+      <div class="overall-progress">
+        <div class="overall-progress__track">
+          <div
+            class="overall-progress__fill"
+            [style.width.%]="overallProgress()"
+            [class.overall-progress__fill--complete]="overallProgress() === 100"
+          ></div>
+        </div>
+        <span class="overall-progress__label">{{ overallProgress() }}%</span>
+      </div>
+    }
+  </header>
+
+  <!-- ============================================================
+       TOOLBAR — Controls
+       ============================================================ -->
+  @if (!loading() && checklist().length > 0) {
+    <div class="pickup-toolbar">
+      <!-- Search bar -->
+      <div class="search-bar">
+        <span class="search-bar__icon">🔍</span>
+        <input
+          id="pickup-search"
+          type="text"
+          class="search-bar__input"
+          placeholder="Tìm theo tên sản phẩm, mã SP, khách hàng, SĐT..."
+          [ngModel]="searchKeyword()"
+          (ngModelChange)="onSearch($event)" />
+        @if (searchKeyword()) {
+          <button class="search-clear-btn" (click)="clearSearch()" title="Xóa tìm kiếm">✕</button>
+        }
+      </div>
+
+      <!-- Filter toggle -->
+      <button
+        class="btn btn--ghost filter-btn"
+        [class.filter-btn--active]="showOnlyPending()"
+        (click)="togglePendingFilter()"
+      >
+        @if (showOnlyPending()) {
+          <span>👁️ Tất cả</span>
+        } @else {
+          <span>⏳ Chưa xong ({{ checklist().length - completedCards() }})</span>
+        }
+      </button>
+    </div>
+  }
+
+  <!-- ============================================================
+       LOADING SKELETON
+       ============================================================ -->
+  @if (loading()) {
+    <div class="table-card">
+      <div class="skeleton-rows">
+        @for (i of [1,2,3,4,5,6]; track i) {
+          <div class="skeleton-row">
+            <div class="skeleton skeleton-col-stt"></div>
+            <div class="skeleton skeleton-col-img"></div>
+            <div class="skeleton skeleton-col-name"></div>
+            <div class="skeleton skeleton-col-cat"></div>
+            <div class="skeleton skeleton-col-progress"></div>
+            <div class="skeleton skeleton-col-action"></div>
+          </div>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- ============================================================
+       EMPTY STATE
+       ============================================================ -->
+  @if (!loading() && checklist().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">🎉</div>
+      <h2 class="empty-state__title">Tất cả đã nhặt xong!</h2>
+      <p class="empty-state__desc">Không còn đơn hàng nào cần gom hàng.</p>
+    </div>
+  }
+
+  @if (!loading() && checklist().length > 0 && filteredChecklist().length === 0) {
+    <div class="empty-state">
+      <div class="empty-state__icon">🔍</div>
+      <h2 class="empty-state__title">Không tìm thấy sản phẩm</h2>
+      <p class="empty-state__desc">Không có kết quả nào phù hợp với từ khóa "{{ searchKeyword() }}".</p>
+      <button class="btn btn--ghost" (click)="clearSearch()" style="margin-top: 12px">✕ Xóa tìm kiếm</button>
+    </div>
+  }
+
+  <!-- ============================================================
+       TABLE VIEW
+       ============================================================ -->
+  @if (!loading() && filteredChecklist().length > 0) {
+    <div class="table-card">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th class="col-stt">STT</th>
+              <th class="col-img">Ảnh</th>
+              <th class="col-name">Sản phẩm</th>
+              <th class="col-progress">Tiến độ</th>
+              <th class="col-action">Chi tiết KH</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (card of pagedChecklist(); track card.productId; let i = $index) {
+              <tr class="data-row" [class.row--complete]="card.totalPicked >= card.totalNeeded"
+                  [class.row--partial]="card.totalPicked > 0 && card.totalPicked < card.totalNeeded">
+
+                <!-- STT -->
+                <td class="col-stt">
+                  <span class="row-index">{{ currentPickupPage() * pickupPageSize + i + 1 }}</span>
+                </td>
+
+                <!-- Ảnh sản phẩm -->
+                <td class="col-img">
+                  <div class="product-thumb">
+                    @if (card.imageUrl) {
+                      <img [src]="card.imageUrl" [alt]="card.productName" class="thumb-img" loading="lazy"
+                           (error)="$any($event.target).style.display='none'" />
+                    }
+                    <span class="thumb-fallback">📦</span>
+                  </div>
+                </td>
+
+                <!-- Tên sản phẩm -->
+                <td class="col-name">
+                  <div class="product-info">
+                    <span class="product-code">{{ card.productCode }}</span>
+                    <span class="product-name">{{ card.productName }}</span>
+                  </div>
+                </td>
+
+                <!-- Tiến độ -->
+                <td class="col-progress">
+                  <div class="progress-cell">
+                    <div class="progress-bar-wrap" [class]="getProgressClass(card)">
+                      <div class="progress-track">
+                        <div class="progress-fill" [style.width.%]="getProgressPercent(card)"></div>
+                      </div>
+                    </div>
+                    <span class="progress-label" [class]="getProgressClass(card)">
+                      {{ getStatusEmoji(card) }} <strong>{{ card.totalPicked }}</strong>/{{ card.totalNeeded }}
+                    </span>
+                  </div>
+                </td>
+
+                <!-- Chi tiết khách hàng (accordion inline) -->
+                <td class="col-action">
+                  <button class="btn-expand" (click)="toggleCard(card.productId)"
+                    [class.btn-expand--active]="isExpanded(card.productId)">
+                    {{ isExpanded(card.productId) ? '▲ Thu lại' : '▼ Xem KH' }}
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Allocation detail row (expandable) -->
+              @if (isExpanded(card.productId)) {
+                <tr class="detail-row">
+                  <td colspan="6" class="detail-cell">
+                    <div class="allocation-table-wrap">
+                      <table class="allocation-table">
+                        <thead>
+                          <tr>
+                            <th>Khách hàng</th>
+                            <th>Số điện thoại</th>
+                            <th class="qty-col">Đã nhặt / Cần</th>
+                            <th class="qty-col">Điều chỉnh</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          @for (alloc of card.allocations; track alloc.orderItemId) {
+                            <tr class="alloc-row" [class.alloc-row--done]="alloc.pickedQuantity >= alloc.quantity">
+                              <td>
+                                <div class="alloc-customer">
+                                  <span class="alloc-name">{{ alloc.customerName }}</span>
+                                </div>
+                              </td>
+                              <td>
+                                @if (alloc.customerPhone) {
+                                  <a class="alloc-phone" [href]="'tel:' + alloc.customerPhone"
+                                    (click)="$event.stopPropagation()">{{ alloc.customerPhone }}</a>
+                                } @else {
+                                  <span class="empty-val">—</span>
+                                }
+                              </td>
+                              <td class="qty-col">
+                                <div class="qty-display">
+                                  <span class="qty-picked" [class.qty-picked--full]="alloc.pickedQuantity >= alloc.quantity">
+                                    {{ alloc.pickedQuantity }}
+                                  </span>
+                                  <span class="qty-sep">/</span>
+                                  <span class="qty-total">{{ alloc.quantity }}</span>
+                                </div>
+                              </td>
+                              <td class="qty-col">
+                                <div class="quantity-control">
+                                  <button class="qty-btn qty-btn--minus"
+                                    (click)="updatePicked(alloc, card, -1)"
+                                    [disabled]="alloc.pickedQuantity <= 0 || isItemUpdating(alloc.orderItemId)">
+                                    @if (isItemUpdating(alloc.orderItemId)) {
+                                      <span class="spinner-sm"></span>
+                                    } @else { − }
+                                  </button>
+                                  <button class="qty-btn qty-btn--plus"
+                                    (click)="updatePicked(alloc, card, +1)"
+                                    [disabled]="alloc.pickedQuantity >= alloc.quantity || isItemUpdating(alloc.orderItemId)">
+                                    +
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          }
+                        </tbody>
+                      </table>
+                    </div>
+                  </td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPickupPages() > 1) {
+        <div class="pagination">
+          <button class="btn btn--ghost btn-sm" [disabled]="currentPickupPage() === 0"
+            (click)="changePickupPage(currentPickupPage() - 1)">‹ Trước</button>
+          @for (p of pickupPages(); track p) {
+            <button class="btn btn--ghost btn-sm"
+              [class.pagination__btn--active]="currentPickupPage() === p"
+              (click)="changePickupPage(p)">{{ p + 1 }}</button>
+          }
+          <button class="btn btn--ghost btn-sm" [disabled]="currentPickupPage() >= totalPickupPages() - 1"
+            (click)="changePickupPage(currentPickupPage() + 1)">Sau ›</button>
+        </div>
+      }
+    </div>
+  }
+
+  <!-- Footer padding -->
+  <div style="height: 16px;"></div>
+</div>

@@ -1,0 +1,374 @@
+<div class="order-page">
+
+  <!-- Header -->
+  <div class="order-header">
+    <a routerLink="/orders" class="back-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      Quay lại
+    </a>
+    <h1 class="order-title">Tạo đơn hàng mới</h1>
+  </div>
+
+  @if (loadingData()) {
+    <div class="loading-wrap">
+      <span class="spinner spinner--lg"></span>
+      <span class="loading-text">Đang tải dữ liệu...</span>
+    </div>
+  } @else {
+
+  <div class="order-body">
+
+    <!-- ═══════════════ BƯỚC 1: KHÁCH HÀNG ═══════════════ -->
+    <section class="step-card" [class.step-card--done]="selectedCustomer()">
+      <div class="step-header">
+        <div class="step-badge" [class.step-badge--done]="selectedCustomer()">
+          @if (selectedCustomer()) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          } @else { 1 }
+        </div>
+        <h2 class="step-title">Khách hàng</h2>
+        <button class="add-section-btn" (click)="openCustomerModal()" title="Thêm khách hàng mới">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Thêm khách hàng
+        </button>
+        @if (selectedCustomer()) {
+          <button class="step-change-btn" (click)="clearCustomer()">Thay đổi</button>
+        }
+      </div>
+
+      <!-- Đã chọn khách hàng -->
+      @if (selectedCustomer()) {
+        <div class="selected-card">
+          <div class="selected-card__icon">👤</div>
+          <div class="selected-card__info">
+            <p class="selected-card__name">{{ selectedCustomer()!.fullName }}</p>
+            @if (selectedCustomer()!.phoneNumber) {
+              <p class="selected-card__sub">{{ selectedCustomer()!.phoneNumber }}</p>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Tìm kiếm khách hàng -->
+      @if (!selectedCustomer()) {
+        <div class="picker-wrap">
+          <div class="search-box" [class.search-box--error]="formErrors()['customer']">
+            <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input
+              id="customer-search-input"
+              type="text"
+              class="search-input"
+              placeholder="Tìm theo tên hoặc số điện thoại..."
+              [ngModel]="customerSearch()"
+              (ngModelChange)="customerSearch.set($event); showCustomerDrop.set(true)"
+              (focus)="showCustomerDrop.set(true)"
+              (blur)="setTimeout(() => showCustomerDrop.set(false), 200)"
+              autocomplete="off" />
+          </div>
+          @if (formErrors()['customer']) {
+            <p class="field-error">{{ formErrors()['customer'] }}</p>
+          }
+
+          @if (showCustomerDrop()) {
+            <div class="search-dropdown">
+              @if (filteredCustomers().length > 0) {
+                @for (c of filteredCustomers(); track c.id) {
+                  <button class="search-option" (click)="selectCustomer(c)">
+                    <span class="option-main">{{ c.fullName }}</span>
+                    @if (c.phoneNumber) {
+                      <span class="option-sub">{{ c.phoneNumber }}</span>
+                    }
+                  </button>
+                }
+              } @else {
+                <div class="no-results">Không tìm thấy "{{ customerSearch() }}"</div>
+              }
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ═══════════════ BƯỚC 2: SẢN PHẨM ═══════════════ -->
+    <section class="step-card">
+      <div class="step-header">
+        <div class="step-badge" [class.step-badge--done]="lineItems().length > 0">
+          @if (lineItems().length > 0) {
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+          } @else { 2 }
+        </div>
+        <h2 class="step-title">Sản phẩm
+          @if (lineItems().length > 0) {
+            <span class="item-count-badge">{{ lineItems().length }}</span>
+          }
+        </h2>
+        <button class="add-section-btn" (click)="openProductModal()" title="Thêm sản phẩm mới">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Thêm sản phẩm
+        </button>
+      </div>
+
+      @if (formErrors()['items']) {
+        <p class="field-error" style="margin-bottom: 12px">{{ formErrors()['items'] }}</p>
+      }
+      @if (formErrors()['price']) {
+        <p class="field-error" style="margin-bottom: 12px">{{ formErrors()['price'] }}</p>
+      }
+
+      <!-- Tìm kiếm sản phẩm -->
+      <div class="picker-wrap" style="margin-bottom: 12px">
+        <div class="search-box">
+          <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input
+            id="product-search-input"
+            type="text"
+            class="search-input"
+            placeholder="Tìm theo tên hoặc mã sản phẩm..."
+            [ngModel]="productSearch()"
+            (ngModelChange)="productSearch.set($event); showProductDrop.set(true)"
+            (focus)="showProductDrop.set(true)"
+            (blur)="setTimeout(() => showProductDrop.set(false), 200)"
+            autocomplete="off" />
+        </div>
+
+        @if (showProductDrop()) {
+          <div class="search-dropdown">
+            @if (filteredProducts().length > 0) {
+              @for (p of filteredProducts(); track p.id) {
+                <button class="search-option search-option--product" (click)="addProduct(p)">
+                  <span class="cat-emoji">📦</span>
+                  <span class="option-main">{{ p.productName }}</span>
+                  <span class="option-code">{{ p.productCode }}</span>
+                </button>
+              }
+            } @else {
+              <div class="no-results">Không tìm thấy "{{ productSearch() }}"</div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Danh sách sản phẩm đã chọn -->
+      @if (lineItems().length > 0) {
+        <div class="line-items">
+          @for (item of lineItems(); track item.product.id; let idx = $index) {
+            <div class="line-item">
+              <div class="line-item__top">
+                <span class="line-cat">📦</span>
+                <div class="line-product-info">
+                  <span class="line-product-name">{{ item.product.productName }}</span>
+                  <span class="line-product-code">{{ item.product.productCode }}</span>
+                </div>
+                <button class="icon-btn icon-btn--danger" (click)="removeItem(idx)" title="Xóa">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                </button>
+              </div>
+
+              <div class="line-item__controls">
+                <div class="line-field">
+                  <label class="field-label">Số lượng</label>
+                  <div class="qty-control">
+                    <button class="qty-btn" (click)="updateQty(idx, item.quantity - 1)">−</button>
+                    <input class="qty-input" type="number" min="1"
+                      [ngModel]="item.quantity"
+                      (ngModelChange)="updateQty(idx, $event)" />
+                    <button class="qty-btn" (click)="updateQty(idx, item.quantity + 1)">+</button>
+                  </div>
+                </div>
+
+                <div class="line-field">
+                  <label class="field-label">Đơn giá (VND)</label>
+                  <input class="field-input text-right" type="number" min="0" placeholder="0"
+                    [ngModel]="item.unitPrice"
+                    (ngModelChange)="updatePrice(idx, $event)" />
+                </div>
+
+                <div class="line-field">
+                  <label class="field-label">Thành tiền</label>
+                  <span class="line-total" [class.line-total--zero]="lineTotal(item) === 0">
+                    {{ formatCurrency(lineTotal(item)) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    </section>
+
+    <!-- ═══════════════ BƯỚC 3: THÔNG TIN ĐƠN ═══════════════ -->
+    <section class="step-card">
+      <div class="step-header">
+        <div class="step-badge">3</div>
+        <h2 class="step-title">Thông tin đơn hàng</h2>
+      </div>
+
+      <div class="info-grid">
+        <div class="field-group">
+          <label class="field-label">Ngày đặt hàng</label>
+          <input class="field-input" type="date"
+            [ngModel]="orderDate()" (ngModelChange)="orderDate.set($event)" />
+        </div>
+
+        <div class="field-group" [class.field-group--error]="formErrors()['deposit']">
+          <label class="field-label">Tiền đặt cọc (VND)</label>
+          <input class="field-input" type="number" min="0" placeholder="0"
+            [ngModel]="depositAmount()" (ngModelChange)="depositAmount.set(+$event)" />
+          @if (formErrors()['deposit']) {
+            <span class="field-error">{{ formErrors()['deposit'] }}</span>
+          }
+        </div>
+
+        <div class="field-group field-group--full">
+          <label class="field-label">Ghi chú</label>
+          <textarea class="field-input field-textarea"
+            placeholder="Màu sắc, size, yêu cầu đặc biệt..."
+            [ngModel]="note()" (ngModelChange)="note.set($event)"></textarea>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════ TỔNG KẾT ═══════════════ -->
+    <section class="summary-card">
+      <h2 class="step-title" style="margin-bottom: 16px">Tính tiền</h2>
+
+      <div class="summary-row">
+        <span class="summary-label">Tổng tiền hàng ({{ lineItems().length }} sản phẩm)</span>
+        <span class="summary-val">{{ formatCurrency(totalAmount()) }}</span>
+      </div>
+      <div class="summary-row">
+        <span class="summary-label">Đã đặt cọc</span>
+        <span class="summary-val summary-val--deposit">− {{ formatCurrency(depositAmount()) }}</span>
+      </div>
+      <div class="summary-divider"></div>
+      <div class="summary-row summary-row--big">
+        <span class="summary-label--big">Còn lại phải trả</span>
+        <span class="summary-val--big" [class.summary-val--paid]="remainingAmount() === 0">
+          {{ formatCurrency(remainingAmount()) }}
+        </span>
+      </div>
+    </section>
+
+    <!-- ═══════════════ SUBMIT ═══════════════ -->
+    <div class="form-actions">
+      <a routerLink="/orders" class="btn-ghost">Hủy</a>
+      <button class="btn-submit" (click)="submit()" [disabled]="submitting()">
+        @if (submitting()) {
+          <span class="spinner spinner--sm spinner--white"></span>
+        } @else {
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V22H4V12"/><path d="M22 7H2v5h20V7z"/><path d="M12 22V7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg>
+        }
+        Tạo đơn hàng
+      </button>
+    </div>
+
+  </div>
+  } <!-- /else loadingData -->
+
+</div>
+
+
+<!-- ════════════════════════════════════════════
+     MODAL: THÊM KHÁCH HÀNG MỚI
+     ════════════════════════════════════════════ -->
+@if (showCustomerModal()) {
+  <div class="modal-overlay" (click)="closeCustomerModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">Thêm khách hàng mới</h2>
+        <button class="btn btn--icon" (click)="closeCustomerModal()">✕</button>
+      </div>
+      <div class="modal__body">
+        <!-- Họ tên -->
+        <div class="form-group" [class.form-group--error]="custErrors()['fullName']">
+          <label class="form-label">Họ và tên *</label>
+          <input id="cust-fullname" class="form-input" placeholder="Nguyễn Thị Thu"
+            [ngModel]="newCustName()" (ngModelChange)="newCustName.set($event)" />
+          @if (custErrors()['fullName']) {
+            <span class="form-error">{{ custErrors()['fullName'] }}</span>
+          }
+        </div>
+        <!-- SĐT -->
+        <div class="form-group" [class.form-group--error]="custErrors()['phone']">
+          <label class="form-label">Số điện thoại</label>
+          <input id="cust-phone" class="form-input" type="tel" placeholder="0987 654 321"
+            [ngModel]="newCustPhone()" (ngModelChange)="newCustPhone.set($event)" />
+          @if (custErrors()['phone']) {
+            <span class="form-error">{{ custErrors()['phone'] }}</span>
+          }
+        </div>
+        <!-- Facebook -->
+        <div class="form-group">
+          <label class="form-label">Facebook URL</label>
+          <input id="cust-facebook" class="form-input" placeholder="https://facebook.com/ten-khach"
+            [ngModel]="newCustFb()" (ngModelChange)="newCustFb.set($event)" />
+        </div>
+        <!-- Địa chỉ -->
+        <div class="form-group">
+          <label class="form-label">Địa chỉ nhận hàng</label>
+          <input id="cust-address" class="form-input" placeholder="123 Đường ABC, Quận 1, TP.HCM"
+            [ngModel]="newCustAddress()" (ngModelChange)="newCustAddress.set($event)" />
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" (click)="closeCustomerModal()">Hủy</button>
+        <button class="btn btn--primary" (click)="saveNewCustomer()" [disabled]="savingCustomer()">
+          @if (savingCustomer()) { <span class="spinner"></span> }
+          Thêm khách hàng
+        </button>
+      </div>
+    </div>
+  </div>
+}
+
+
+<!-- ════════════════════════════════════════════
+     MODAL: THÊM SẢN PHẨM MỚI
+     ════════════════════════════════════════════ -->
+@if (showProductModal()) {
+  <div class="modal-overlay" (click)="closeProductModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">Thêm sản phẩm mới</h2>
+        <button class="btn btn--icon" (click)="closeProductModal()">✕</button>
+      </div>
+      <div class="modal__body">
+
+        <!-- Tên sản phẩm -->
+        <div class="form-group" [class.form-group--error]="prodErrors()['productName']">
+          <label class="form-label">Tên sản phẩm *</label>
+          <input id="prod-name" class="form-input"
+            placeholder="Áo hoodie unisex Hàn Quốc form rộng..."
+            [ngModel]="newProdName()" (ngModelChange)="newProdName.set($event)" />
+          @if (prodErrors()['productName']) {
+            <span class="form-error">{{ prodErrors()['productName'] }}</span>
+          }
+        </div>
+        <!-- URL hình ảnh -->
+        <div class="form-group">
+          <label class="form-label">URL hình ảnh</label>
+          <input id="prod-image" class="form-input" type="url"
+            placeholder="https://images.unsplash.com/..."
+            [ngModel]="newProdImageUrl()" (ngModelChange)="newProdImageUrl.set($event)" />
+          @if (newProdImageUrl()) {
+            <div class="preview-wrap">
+              <img [src]="newProdImageUrl()" alt="Preview" class="img-preview"
+                (error)="$any($event.target).style.display='none'" />
+              <span class="preview-label">Xem trước hình ảnh</span>
+            </div>
+          }
+        </div>
+        <p class="modal-note">
+          💡 Mã sản phẩm sẽ được tạo tự động sau khi lưu
+        </p>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" (click)="closeProductModal()">Hủy</button>
+        <button class="btn btn--primary" (click)="saveNewProduct()" [disabled]="savingProduct()">
+          @if (savingProduct()) { <span class="spinner"></span> }
+          Thêm sản phẩm
+        </button>
+      </div>
+    </div>
+  </div>
+}

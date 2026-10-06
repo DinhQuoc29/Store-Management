@@ -1,0 +1,311 @@
+<div class="page-container page-container--customers">
+
+  <!-- ═══════════════════════════════════ HEADER ═══════════════════════════════════ -->
+  <div class="page-header">
+    <div>
+      <h1 class="page-title">Khách hàng</h1>
+      <p class="page-subtitle">{{ totalElements() }} khách hàng</p>
+    </div>
+    <button class="btn btn--primary" (click)="openCreate()">
+      <span>＋</span> Thêm mới
+    </button>
+  </div>
+
+  <!-- ═══════════════════════════════════ SEARCH ═══════════════════════════════════ -->
+  <div class="search-bar">
+    <span class="search-bar__icon">🔍</span>
+    <input id="customer-search" type="text" class="search-bar__input" placeholder="Tìm theo tên, số điện thoại..."
+      [ngModel]="keyword()" (ngModelChange)="onSearch($event)" />
+  </div>
+
+  <!-- ═══════════════════════════════════ TABLE CARD ═══════════════════════════════ -->
+  <div class="table-card">
+
+    <!-- Skeleton loading -->
+    @if (loading()) {
+    <div class="skeleton-rows">
+      @for (_ of [1,2,3,4,5]; track $index) {
+      <div class="skeleton-row">
+        <div class="skeleton skeleton-col-stt"></div>
+        <div class="skeleton skeleton-col-name"></div>
+        <div class="skeleton skeleton-col-md"></div>
+        <div class="skeleton skeleton-col-md"></div>
+        <div class="skeleton skeleton-col-lg"></div>
+        <div class="skeleton skeleton-col-action"></div>
+      </div>
+      }
+    </div>
+    }
+
+    <!-- Table -->
+    @if (!loading()) {
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th class="col-stt">STT</th>
+            <th class="col-name">Họ và tên</th>
+            <th class="col-fb">Facebook</th>
+            <th class="col-phone">Số điện thoại</th>
+            <th class="col-addr">Địa chỉ</th>
+            <th class="col-action">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (customers().length === 0) {
+          <tr>
+            <td colspan="6" class="empty-cell">
+              <div class="empty-state">
+                <div class="empty-state__icon">
+                  <img src="/icons/customer.png" alt="Khách hàng" class="empty-state__img" />
+                </div>
+                <p class="empty-state__title">Chưa có khách hàng</p>
+                <p class="empty-state__desc">Thêm khách hàng đầu tiên để bắt đầu</p>
+                <button class="btn btn--primary" (click)="openCreate()">+ Thêm khách hàng</button>
+              </div>
+            </td>
+          </tr>
+          }
+
+          @for (c of customers(); track c.id; let i = $index) {
+          <tr class="data-row">
+            <!-- STT -->
+            <td class="col-stt">
+              <span class="row-index">{{ currentPage() * pageSize + i + 1 }}</span>
+            </td>
+
+            <!-- Tên -->
+            <td class="col-name">
+              <span class="customer-name">{{ c.fullName }}</span>
+            </td>
+
+            <!-- Facebook -->
+            <td class="col-fb">
+              @if (c.facebookUrl) {
+              <a class="fb-link" [href]="c.facebookUrl" target="_blank" rel="noopener noreferrer"
+                title="{{ c.facebookUrl }}">
+                <span class="fb-icon">f</span>
+                <span class="fb-name">{{ facebookDisplay(c.facebookUrl) }}</span>
+              </a>
+              } @else {
+              <span class="empty-val">—</span>
+              }
+            </td>
+
+            <!-- SĐT -->
+            <td class="col-phone">
+              @if (c.phoneNumber) {
+              <div class="phone-cell">
+                <a class="phone-link" [href]="'tel:' + c.phoneNumber">{{ c.phoneNumber }}</a>
+              </div>
+              } @else {
+              <span class="empty-val">—</span>
+              }
+            </td>
+
+            <!-- Địa chỉ -->
+            <td class="col-addr">
+              <span class="addr-text" [title]="c.address ?? ''">{{ c.address || '—' }}</span>
+            </td>
+
+            <!-- Thao tác -->
+            <td class="col-action">
+              <div class="action-group">
+                <button class="btn-orders" (click)="openOrdersModal(c)" title="Xem đơn hàng">
+                  <img src="/icons/eye.png" alt="Xem đơn hàng" class="action-icon-img" />
+                </button>
+                <button class="btn btn--icon" (click)="openEdit(c)" title="Chỉnh sửa">
+                  <img src="/icons/edit.png" alt="Chỉnh sửa" class="action-icon-img" />
+                </button>
+                <button class="btn btn--icon btn--icon-danger" (click)="confirmDelete(c.id)" title="Xóa">
+                  <img src="/icons/bin.png" alt="Xóa" class="action-icon-img" />
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (totalPages() > 1) {
+    <div class="pagination">
+      <button class="btn btn--ghost" [disabled]="currentPage() === 0" (click)="changePage(currentPage() - 1)">‹</button>
+
+      @for (p of pages(); track p) {
+      <button class="btn btn--ghost" [class.pagination__btn--active]="currentPage() === p" (click)="changePage(p)">{{ p
+        + 1 }}</button>
+      }
+
+      <button class="btn btn--ghost" [disabled]="currentPage() === totalPages() - 1"
+        (click)="changePage(currentPage() + 1)">›</button>
+    </div>
+    }
+    }
+
+  </div><!-- /table-card -->
+
+
+  <!-- ══════════════════════ CREATE / EDIT MODAL ══════════════════════ -->
+  @if (showModal()) {
+  <div class="modal-overlay" (click)="closeModal()">
+    <div class="modal" (click)="$event.stopPropagation()">
+      <div class="modal__header">
+        <h2 class="modal__title">{{ modalTitle() }}</h2>
+        <button class="btn btn--icon" (click)="closeModal()">✕</button>
+      </div>
+      <div class="modal__body">
+        <!-- Họ tên -->
+        <div class="form-group" [class.form-group--error]="formErrors()['fullName']">
+          <label class="form-label">Họ và tên *</label>
+          <input id="form-fullname" class="form-input" placeholder="Nguyễn Thị Thu" [ngModel]="formName()"
+            (ngModelChange)="formName.set($event)" />
+          @if (formErrors()['fullName']) {
+          <span class="form-error">{{ formErrors()['fullName'] }}</span>
+          }
+        </div>
+        <!-- SĐT -->
+        <div class="form-group" [class.form-group--error]="formErrors()['phoneNumber']">
+          <label class="form-label">Số điện thoại</label>
+          <input id="form-phone" class="form-input" type="tel" placeholder="0987 654 321" [ngModel]="formPhone()"
+            (ngModelChange)="formPhone.set($event)" />
+          @if (formErrors()['phoneNumber']) {
+          <span class="form-error">{{ formErrors()['phoneNumber'] }}</span>
+          }
+        </div>
+        <!-- Facebook -->
+        <div class="form-group">
+          <label class="form-label">Facebook URL</label>
+          <input id="form-facebook" class="form-input" placeholder="https://facebook.com/ten-khach"
+            [ngModel]="formFacebook()" (ngModelChange)="formFacebook.set($event)" />
+        </div>
+        <!-- Địa chỉ -->
+        <div class="form-group">
+          <label class="form-label">Địa chỉ nhận hàng</label>
+          <input id="form-address" class="form-input" placeholder="123 Đường ABC, Quận 1, TP.HCM"
+            [ngModel]="formAddress()" (ngModelChange)="formAddress.set($event)" />
+        </div>
+      </div>
+      <div class="modal__footer">
+        <button class="btn btn--ghost" (click)="closeModal()">Hủy</button>
+        <button class="btn btn--primary" [disabled]="submitting()" (click)="submit()">
+          @if (submitting()) { <span class="spinner"></span> }
+          {{ isEditing() ? 'Cập nhật' : 'Thêm khách hàng' }}
+        </button>
+      </div>
+    </div>
+  </div>
+  }
+
+
+  <!-- ══════════════════════ ORDERS MODAL ══════════════════════════════ -->
+  @if (showOrdersModal()) {
+  <div class="modal-overlay" (click)="closeOrdersModal()">
+    <div class="modal modal--wide" (click)="$event.stopPropagation()">
+
+      <!-- Header -->
+      <div class="modal__header">
+        <div class="orders-modal-header">
+          <div>
+            <h2 class="modal__title">{{ selectedCustomer()!.fullName }}</h2>
+            <p class="orders-modal-sub">
+              {{ ordersLoading() ? 'Đang tải...' : ordersTotal() + ' đơn hàng' }}
+            </p>
+          </div>
+        </div>
+        <button class="btn btn--icon" (click)="closeOrdersModal()">✕</button>
+      </div>
+
+      <!-- Body -->
+      <div class="orders-modal-body">
+
+        <!-- Loading skeleton -->
+        @if (ordersLoading()) {
+        <div class="orders-skeleton">
+          @for (_ of [1,2,3]; track $index) {
+          <div class="skeleton order-skeleton-row"></div>
+          }
+        </div>
+        }
+
+        <!-- Empty -->
+        @if (!ordersLoading() && customerOrders().length === 0) {
+        <div class="orders-empty">
+          <span class="orders-empty__icon">📋</span>
+          <p class="orders-empty__text">Khách hàng này chưa có đơn hàng nào</p>
+        </div>
+        }
+
+        <!-- Orders table -->
+        @if (!ordersLoading() && customerOrders().length > 0) {
+        <div class="orders-table-wrap">
+          <table class="orders-table">
+            <thead>
+              <tr>
+                <th>Mã đơn</th>
+                <th>Ngày</th>
+                <th class="num-col">Tổng tiền</th>
+                <th class="num-col">Đã cọc</th>
+                <th class="num-col">Còn lại</th>
+                <th>Trạng thái</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (o of customerOrders(); track o.id) {
+              <tr class="order-row" [class.order-row--paid]="o.remainingAmount === 0">
+                <td>
+                  <span class="order-id">#{{ o.id }}</span>
+                </td>
+                <td class="order-date">{{ o.orderDate | date:'dd/MM/yy' }}</td>
+                <td class="num-col order-amount">{{ fmt(o.totalAmount) }}</td>
+                <td class="num-col deposit-amount">{{ fmt(o.depositAmount) }}</td>
+                <td class="num-col">
+                  <span class="remaining-amount" [class.remaining--zero]="o.remainingAmount === 0">
+                    {{ fmt(o.remainingAmount) }}
+                  </span>
+                </td>
+                <td>
+                  <div class="status-badges">
+                    <span class="status-dot" [style.background]="pickupColors[o.pickupStatus]"
+                      [title]="pickupLabels[o.pickupStatus]">
+                    </span>
+                    <span class="status-dot" [style.background]="paymentColors[o.paymentStatus]"
+                      [title]="paymentLabels[o.paymentStatus]">
+                    </span>
+                    <span class="status-dot" [style.background]="shippingColors[o.shippingStatus]"
+                      [title]="shippingLabels[o.shippingStatus]">
+                    </span>
+                  </div>
+                </td>
+                <td>
+                  <button class="btn-detail" (click)="goToOrderDetail(o.id)">
+                    Chi tiết →
+                  </button>
+                </td>
+              </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        }
+      </div>
+
+      <!-- Footer -->
+      <div class="modal__footer">
+        <button class="btn btn--ghost" (click)="closeOrdersModal()">Đóng</button>
+      </div>
+
+    </div>
+  </div>
+  }
+
+
+  <!-- ══════════════════════ CONFIRM DELETE ══════════════════════════ -->
+  @if (deletingId()) {
+  <app-confirm-dialog message="Xác nhận xóa khách hàng? Hành động này không thể hoàn tác." (confirmed)="doDelete()"
+    (cancelled)="cancelDelete()"></app-confirm-dialog>
+  }
+
+</div>

@@ -1,0 +1,37 @@
+version: '3.8'
+
+services:
+  # MySQL Database
+  db:
+    image: mysql:8.0
+    container_name: nhungtrinhstore-db
+    environment:
+      MYSQL_ROOT_PASSWORD: shizadon2005
+      MYSQL_DATABASE: nhungtrinhstore
+    ports:
+      - "3307:3306"  # 3307 để không đụng MySQL local
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Spring Boot + Angular App
+  app:
+    build: .
+    container_name: nhungtrinhstore-app
+    ports:
+      - "8080:8080"
+    environment:
+      DATABASE_URL: jdbc:mysql://db:3306/nhungtrinhstore?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Ho_Chi_Minh
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: shizadon2005
+      SPRING_PROFILES_ACTIVE: prod
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  mysql_data:
