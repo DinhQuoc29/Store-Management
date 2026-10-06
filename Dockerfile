@@ -11,8 +11,8 @@ COPY frontend/package*.json ./
 # Upgrade npm to match packageManager requirement (npm@11.x)
 RUN npm install -g npm@11
 
-# Install dependencies
-RUN npm ci
+# Install dependencies (use npm install to avoid lock file sync issues cross-platform)
+RUN npm install --legacy-peer-deps
 
 # Copy frontend source and build
 COPY frontend/ ./
