@@ -1,25 +1,33 @@
 package com.example.nhungtrinhstore.common;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.io.IOException;
+
 /**
  * Handles Angular routing (SPA fallback).
- * Only forwards to index.html for routes WITHOUT a file extension.
- * Static files (.png, .js, .css, etc.) are served directly by Spring Boot.
+ * Routes without a file extension → forward to index.html (Angular client-side routing).
+ * Routes with a file extension (.png, .js, .css...) → 404 (served by Spring static handler).
  */
 @Controller
 public class SpaController {
 
     @RequestMapping(value = "/**")
-    public String forward(HttpServletRequest request) {
+    public void forward(HttpServletRequest request, HttpServletResponse response)
+            throws IOException, ServletException {
         String path = request.getRequestURI();
-        // If path has a file extension (e.g. .png, .js, .css), don't forward — let Spring serve it
-        if (path.contains(".") && !path.endsWith(".html")) {
-            return null; // Let Spring Boot handle static files normally
+        // Static files (have extension like .png, .js, .css) - let Spring serve them
+        if (path.matches(".*\\.[a-zA-Z0-9]+$")) {
+            response.sendError(HttpServletResponse.SC_NOT_FOUND);
+            return;
         }
-        return "forward:/index.html";
+        // Angular routes - serve index.html
+        request.getRequestDispatcher("/index.html").forward(request, response);
     }
 }
+
 
