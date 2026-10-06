@@ -1,13 +1,18 @@
 # ===================================
 # Stage 1: Build Angular Frontend
 # ===================================
-FROM node:20-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 
 WORKDIR /app/frontend
 
 # Copy package files first for better caching
 COPY frontend/package*.json ./
-RUN npm ci --silent
+
+# Upgrade npm to match packageManager requirement (npm@11.x)
+RUN npm install -g npm@11
+
+# Install dependencies
+RUN npm ci
 
 # Copy frontend source and build
 COPY frontend/ ./
