@@ -691,3 +691,77 @@ a { color: inherit; }
   overflow-y: auto;
   animation: slideDown 0.15s ease;
 }
+
+/* ---------------------------------------------------------------
+   Mobile Responsive — Global
+   --------------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Tighter page padding on mobile */
+  .page-container {
+    padding: var(--space-3) var(--space-3);
+    padding-bottom: var(--space-10);
+  }
+
+  .page-container--full {
+    padding-left: var(--space-3);
+    padding-right: var(--space-3);
+  }
+
+  .page-title {
+    font-size: var(--font-size-lg);
+  }
+
+  .page-header {
+    gap: var(--space-3);
+    margin-bottom: var(--space-4);
+  }
+
+  /* Buttons slightly more compact */
+  .btn {
+    padding: 7px var(--space-3);
+    font-size: 12px;
+  }
+
+  /* Table cells tighter */
+  .data-table th {
+    padding: 8px var(--space-2);
+    font-size: 10px;
+  }
+
+  .data-table td {
+    padding: 10px var(--space-2);
+    font-size: 12px;
+  }
+
+  /* Modal full-width on mobile */
+  .modal {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .modal__header {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .modal__body {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+
+  .modal__footer {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  /* Pagination compact */
+  .pagination {
+    gap: 2px;
+    padding: var(--space-3);
+  }
+
+  .pagination .btn,
+  .pagination .btn-sm {
+    padding: 4px 8px;
+    font-size: 11px;
+    min-width: 28px;
+  }
+}

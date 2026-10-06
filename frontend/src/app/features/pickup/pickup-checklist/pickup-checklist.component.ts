@@ -224,6 +224,77 @@ export class PickupChecklistComponent implements OnInit {
     return this.updatingItems().has(orderItemId);
   }
 
+  /**
+   * Xử lý khi người dùng nhập trực tiếp số vào ô input "Đã nhặt".
+   * Clamp giá trị giữa 0 và alloc.quantity, chỉ gọi API nếu giá trị thay đổi.
+   */
+  onPickedInputChange(
+    event: Event,
+    allocation: PickupAllocationItem,
+    card: PickupProductCard
+  ): void {
+    const inputEl = event.target as HTMLInputElement;
+    let newValue = parseInt(inputEl.value, 10);
+
+    // Nếu nhập không phải số → reset về giá trị cũ
+    if (isNaN(newValue)) {
+      inputEl.value = String(allocation.pickedQuantity);
+      return;
+    }
+
+    // Clamp giữa 0 và quantity
+    newValue = Math.max(0, Math.min(newValue, allocation.quantity));
+    inputEl.value = String(newValue);
+
+    // Không thay đổi → bỏ qua
+    if (newValue === allocation.pickedQuantity) return;
+
+    // Đánh dấu item đang loading
+    this.updatingItems.update(set => new Set(set).add(allocation.orderItemId));
+
+    this.orderService.updatePickedQuantity(allocation.orderItemId, { pickedQuantity: newValue })
+      .subscribe({
+        next: (updatedItem) => {
+          this.checklist.update(list =>
+            list.map(c => {
+              if (c.productId !== card.productId) return c;
+
+              const updatedAllocations = c.allocations.map(a =>
+                a.orderItemId === allocation.orderItemId
+                  ? { ...a, pickedQuantity: updatedItem.pickedQuantity }
+                  : a
+              );
+
+              const newTotalPicked = updatedAllocations
+                .reduce((sum, a) => sum + a.pickedQuantity, 0);
+
+              return {
+                ...c,
+                allocations: updatedAllocations,
+                totalPicked: newTotalPicked
+              };
+            })
+          );
+
+          if (newValue === allocation.quantity) {
+            this.toast.success(`✓ Đã nhặt đủ cho ${allocation.customerName}`);
+          }
+        },
+        error: () => {
+          // Reset input về giá trị cũ khi lỗi
+          inputEl.value = String(allocation.pickedQuantity);
+          this.toast.error('Không thể cập nhật số lượng. Vui lòng thử lại.');
+        },
+        complete: () => {
+          this.updatingItems.update(set => {
+            const next = new Set(set);
+            next.delete(allocation.orderItemId);
+            return next;
+          });
+        }
+      });
+  }
+
   // ---------------------------------------------------------------
   // UI Helpers
   // ---------------------------------------------------------------

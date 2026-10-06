@@ -271,3 +271,95 @@ th.num-col { text-align: right; }
 .empty-state__icon  { font-size: 40px; margin-bottom: var(--space-3); }
 .empty-state__title { font-size: var(--font-size-lg); font-weight: 600; margin-bottom: var(--space-2); color: var(--color-text-primary); }
 .empty-state__desc  { color: var(--color-text-muted); font-size: var(--font-size-sm); margin-bottom: var(--space-5); }
+
+/* ─── Mobile Responsive ─── */
+@media (max-width: 767px) {
+  .page-container--orders {
+    max-width: 100% !important;
+    padding: var(--space-3) var(--space-2);
+  }
+
+  .list-header {
+    flex-wrap: wrap;
+    gap: var(--space-2);
+  }
+
+  /* Search row stacks */
+  .search-row {
+    flex-direction: column;
+    gap: var(--space-2);
+  }
+
+  .search-row .search-bar {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .search-row .filter-toggle,
+  .search-row .filter-btn-note {
+    width: 100%;
+    justify-content: center;
+  }
+
+  /* Filter panel single column */
+  .filter-row {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-2);
+  }
+
+  /* Table: hide less-important columns on mobile */
+  .col-note,
+  th.col-note { display: none; }
+
+  .col-shipping,
+  th.col-shipping { display: none; }
+
+  .col-action,
+  th.col-action { display: none; }
+
+  /* Compact table cells */
+  .data-table td,
+  .data-table th {
+    padding: 8px 6px;
+  }
+
+  .col-id { width: 50px; }
+  .col-date { width: 72px; }
+  .col-customer { min-width: 90px; }
+  .col-amount { width: 90px; }
+  .col-qty { width: 50px; }
+  .col-payment { width: 80px; }
+
+  .order-id { font-size: 12px; }
+  .order-date { font-size: 11px; }
+  .customer-name { font-size: 12px; }
+  .customer-phone { font-size: 11px; }
+  .remaining-text { font-size: 12px; }
+  .qty-picked { font-size: 11px; padding: 2px 5px; }
+
+  /* Skeleton mobile */
+  .skeleton-row {
+    grid-template-columns: 50px 72px 1fr 90px 50px 80px;
+  }
+
+  /* Make row clickable obvious */
+  .data-row {
+    border-left-width: 3px;
+  }
+}
+
+@media (max-width: 480px) {
+  .filter-row {
+    grid-template-columns: 1fr;
+  }
+
+  .col-qty,
+  th.col-qty { display: none; }
+
+  .col-payment,
+  th.col-payment { display: none; }
+
+  .skeleton-row {
+    grid-template-columns: 50px 72px 1fr 90px;
+  }
+}

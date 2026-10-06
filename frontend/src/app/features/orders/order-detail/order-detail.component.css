@@ -709,3 +709,117 @@
 .spinner--xs  { width: 12px; height: 12px; border-width: 2px; }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ─── Mobile Responsive ─── */
+@media (max-width: 767px) {
+  .order-page {
+    max-width: 100%;
+    padding: 0 0 var(--space-8) 0;
+  }
+
+  .order-header {
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+    flex-wrap: wrap;
+  }
+
+  .order-title {
+    font-size: 17px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .back-btn {
+    font-size: 12px;
+    padding: 4px 8px;
+  }
+
+  .btn-delete {
+    font-size: 11px;
+    padding: 4px 10px;
+  }
+
+  /* Customer card + meta stack */
+  .selected-card {
+    flex-direction: column;
+    gap: var(--space-3);
+  }
+
+  .order-meta {
+    min-width: 0;
+    width: 100%;
+  }
+
+  /* Step cards compact */
+  .step-card {
+    padding: var(--space-3) var(--space-3);
+    border-radius: var(--radius-lg);
+  }
+
+  .step-header {
+    gap: var(--space-2);
+    margin-bottom: var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .step-title { font-size: 14px; }
+
+  .add-section-btn {
+    font-size: 11px;
+    padding: 4px 9px;
+  }
+
+  /* Line items compact */
+  .line-item {
+    padding: 10px var(--space-3);
+  }
+
+  .line-item__header {
+    margin-bottom: var(--space-2);
+  }
+
+  .line-product-name { font-size: 13px; }
+
+  /* Stats grid always 2 col on mobile */
+  .line-stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 6px 10px;
+    gap: 6px;
+  }
+
+  /* Items footer compact */
+  .items-footer {
+    gap: var(--space-2);
+    padding: 10px var(--space-3);
+    flex-wrap: wrap;
+  }
+
+  .items-footer__val {
+    font-size: 18px;
+  }
+
+  /* Summary card compact */
+  .summary-card {
+    padding: var(--space-3) var(--space-4);
+  }
+
+  .summary-val--big {
+    font-size: 18px;
+  }
+
+  /* Add/Edit controls stack */
+  .add-controls,
+  .edit-controls {
+    grid-template-columns: 1fr;
+  }
+
+  /* Payment buttons wrap */
+  .payment-btns {
+    gap: var(--space-1);
+  }
+
+  .payment-btn {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

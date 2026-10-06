@@ -223,19 +223,22 @@
                                 </div>
                               </td>
                               <td class="qty-col">
-                                <div class="quantity-control">
-                                  <button class="qty-btn qty-btn--minus"
-                                    (click)="updatePicked(alloc, card, -1)"
-                                    [disabled]="alloc.pickedQuantity <= 0 || isItemUpdating(alloc.orderItemId)">
-                                    @if (isItemUpdating(alloc.orderItemId)) {
-                                      <span class="spinner-sm"></span>
-                                    } @else { − }
-                                  </button>
-                                  <button class="qty-btn qty-btn--plus"
-                                    (click)="updatePicked(alloc, card, +1)"
-                                    [disabled]="alloc.pickedQuantity >= alloc.quantity || isItemUpdating(alloc.orderItemId)">
-                                    +
-                                  </button>
+                                <div class="quantity-input-wrap">
+                                  @if (isItemUpdating(alloc.orderItemId)) {
+                                    <span class="spinner-sm"></span>
+                                  }
+                                  <input
+                                    type="number"
+                                    class="qty-input"
+                                    [class.qty-input--updating]="isItemUpdating(alloc.orderItemId)"
+                                    [class.qty-input--full]="alloc.pickedQuantity >= alloc.quantity"
+                                    [value]="alloc.pickedQuantity"
+                                    [min]="0"
+                                    [max]="alloc.quantity"
+                                    [disabled]="isItemUpdating(alloc.orderItemId)"
+                                    (change)="onPickedInputChange($event, alloc, card)"
+                                    (keydown.enter)="$any($event.target).blur()"
+                                  />
                                 </div>
                               </td>
                             </tr>
