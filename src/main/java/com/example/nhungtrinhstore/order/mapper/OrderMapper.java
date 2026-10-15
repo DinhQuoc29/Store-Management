@@ -7,17 +7,9 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-/**
- * Mapper thủ công cho Order và OrderItem.
- */
 @Component
 public class OrderMapper {
 
-    // ---------------------------------------------------------------
-    // OrderItem mapping
-    // ---------------------------------------------------------------
-
-    /** OrderItem entity -> OrderItemResponse DTO */
     public OrderItemResponse toItemResponse(OrderItem item) {
         var product = item.getProduct();
         return new OrderItemResponse(
@@ -34,11 +26,6 @@ public class OrderMapper {
         );
     }
 
-    // ---------------------------------------------------------------
-    // Order mapping
-    // ---------------------------------------------------------------
-
-    /** Order entity -> OrderResponse DTO (dùng cho detail view, bao gồm items) */
     public OrderResponse toResponse(Order order) {
         List<OrderItemResponse> itemResponses = order.getItems().stream()
             .map(this::toItemResponse)
@@ -65,7 +52,6 @@ public class OrderMapper {
         );
     }
 
-    /** Order entity -> OrderSummaryResponse DTO (dùng cho list view, không có items) */
     public OrderSummaryResponse toSummaryResponse(Order order) {
         var customer = order.getCustomer();
         var items = order.getItems();

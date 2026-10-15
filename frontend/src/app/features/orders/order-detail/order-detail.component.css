@@ -367,6 +367,7 @@
 .stat-val--amber { color: #d97706; font-weight: 700; }
 .stat-val--muted { color: var(--color-text-muted); }
 
+.stat-cell--pick,
 .stat-cell--ship {
   /* interactive cell */
 }
@@ -415,6 +416,24 @@
   font-weight: 700;
   min-width: 32px;
   text-align: center;
+}
+.ship-val--btn {
+  background: none;
+  border: 1px dashed transparent;
+  border-radius: 4px;
+  padding: 2px 4px;
+  cursor: pointer;
+  font-family: inherit;
+  line-height: 1.2;
+  transition: all 0.15s;
+}
+.ship-val--btn:not(:disabled):hover {
+  background: rgba(0, 0, 0, 0.05);
+  border-color: var(--color-border);
+}
+.ship-val--btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
 }
 
 /* ── Line total row ── */
@@ -476,11 +495,12 @@
 }
 .edit-controls {
   display: grid;
-  grid-template-columns: auto 1fr;
-  gap: var(--space-4);
+  grid-template-columns: auto auto 1fr;
+  gap: var(--space-3);
   margin-bottom: var(--space-3);
 }
-@media (max-width: 480px) { .edit-controls { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .edit-controls { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 400px) { .edit-controls { grid-template-columns: 1fr; } }
 
 .edit-actions {
   display: flex;

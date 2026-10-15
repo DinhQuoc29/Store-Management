@@ -10,11 +10,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
-/**
- * DTO để tạo mới đơn hàng.
- * Khách hàng được chỉ định qua customerId.
- * Danh sách sản phẩm phải có ít nhất 1 dòng.
- */
 public record OrderRequest(
 
     @NotNull(message = "ID khách hàng không được để trống")

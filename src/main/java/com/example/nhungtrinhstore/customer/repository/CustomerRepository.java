@@ -11,10 +11,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, Long> {
 
-    /**
-     * Tìm kiếm khách hàng theo tên, số điện thoại hoặc địa chỉ Facebook.
-     * Hỗ trợ phân trang.
-     */
     @Query("""
         SELECT c FROM Customer c
         WHERE LOWER(c.fullName)    LIKE LOWER(CONCAT('%', :keyword, '%'))

@@ -27,6 +27,7 @@ interface EditableItem {
   // edit form state
   editProductSearch: string;
   editQty: number;
+  editPickedQty: number;
   editPrice: number;
   editProductId: number;
   editProductName: string;
@@ -57,8 +58,10 @@ export class OrderDetailComponent implements OnInit {
   // Editable items list
   editableItems = signal<EditableItem[]>([]);
 
-  // Per-item shipped update
+  // Per-item update trackers
   updatingItem = signal<number | null>(null);
+  updatingPickedItem = signal<number | null>(null);
+  updatingShippedItem = signal<number | null>(null);
 
   // Payment status
   updatingPayment = signal(false);
@@ -130,6 +133,7 @@ export class OrderDetailComponent implements OnInit {
       editing: false,
       editProductSearch: i.productName,
       editQty: i.quantity,
+      editPickedQty: i.pickedQuantity,
       editPrice: i.unitPrice,
       editProductId: i.productId,
       editProductName: i.productName,
@@ -139,6 +143,68 @@ export class OrderDetailComponent implements OnInit {
   private syncFromOrder(o: Order) {
     this.order.set(o);
     this.editableItems.set(this.toEditableItems(o.items));
+  }
+
+  // ── Picked quantity ──────────────────────────────────────────
+
+  increasePicked(item: EditableItem): void {
+    if (item.pickedQuantity >= item.quantity) return;
+    this.patchPicked(item, item.pickedQuantity + 1);
+  }
+
+  decreasePicked(item: EditableItem): void {
+    if (item.pickedQuantity <= 0) return;
+    if (item.pickedQuantity <= item.shippedQuantity) {
+      this.toast.error(`Số lượng đã lấy không thể nhỏ hơn số lượng đã gửi (${item.shippedQuantity})`);
+      return;
+    }
+    this.patchPicked(item, item.pickedQuantity - 1);
+  }
+
+  quickSetPicked(item: EditableItem): void {
+    const minVal = item.shippedQuantity;
+    const maxVal = item.quantity;
+    const input = window.prompt(
+      `Nhập số lượng đã lấy cho "${item.productName}" (từ ${minVal} đến ${maxVal}):`,
+      item.pickedQuantity.toString()
+    );
+    if (input === null) return;
+    const newVal = parseInt(input.trim(), 10);
+    if (isNaN(newVal)) {
+      this.toast.error('Vui lòng nhập một số hợp lệ');
+      return;
+    }
+    if (newVal < 0 || newVal > maxVal) {
+      this.toast.error(`Số lượng đã lấy phải từ 0 đến ${maxVal}`);
+      return;
+    }
+    if (newVal < minVal) {
+      this.toast.error(`Số lượng đã lấy không thể nhỏ hơn số lượng đã gửi (${minVal})`);
+      return;
+    }
+    if (newVal === item.pickedQuantity) return;
+    this.patchPicked(item, newVal);
+  }
+
+  private patchPicked(item: EditableItem, newVal: number): void {
+    this.updatingPickedItem.set(item.id);
+    this.orderService.updatePickedQuantity(item.id, { pickedQuantity: newVal }).subscribe({
+      next: () => {
+        this.orderService.getOrderById(+this.id()).subscribe({
+          next: full => {
+            this.syncFromOrder(full);
+            this.updatingPickedItem.set(null);
+            this.toast.success('Đã cập nhật số lượng đã lấy');
+          },
+          error: () => this.updatingPickedItem.set(null)
+        });
+      },
+      error: (err) => {
+        const msg = err?.error?.message || 'Không thể cập nhật số lượng đã lấy';
+        this.toast.error(msg);
+        this.updatingPickedItem.set(null);
+      }
+    });
   }
 
   // ── Shipped quantity ─────────────────────────────────────────
@@ -153,18 +219,42 @@ export class OrderDetailComponent implements OnInit {
     this.patchShipped(item, item.shippedQuantity - 1);
   }
 
+  quickSetShipped(item: EditableItem): void {
+    const maxVal = item.pickedQuantity;
+    const input = window.prompt(
+      `Nhập số lượng đã gửi cho "${item.productName}" (từ 0 đến ${maxVal}):`,
+      item.shippedQuantity.toString()
+    );
+    if (input === null) return;
+    const newVal = parseInt(input.trim(), 10);
+    if (isNaN(newVal)) {
+      this.toast.error('Vui lòng nhập một số hợp lệ');
+      return;
+    }
+    if (newVal < 0 || newVal > maxVal) {
+      this.toast.error(`Số lượng đã gửi phải từ 0 đến số lượng đã lấy (${maxVal})`);
+      return;
+    }
+    if (newVal === item.shippedQuantity) return;
+    this.patchShipped(item, newVal);
+  }
+
   private patchShipped(item: EditableItem, newVal: number): void {
-    this.updatingItem.set(item.id);
+    this.updatingShippedItem.set(item.id);
     this.orderService.updateShippedQuantity(item.id, { shippedQuantity: newVal }).subscribe({
       next: () => {
-        this.orderService.getOrderById(+this.id()).subscribe(full => {
-          this.syncFromOrder(full);
-          this.updatingItem.set(null);
+        this.orderService.getOrderById(+this.id()).subscribe({
+          next: full => {
+            this.syncFromOrder(full);
+            this.updatingShippedItem.set(null);
+          },
+          error: () => this.updatingShippedItem.set(null)
         });
       },
-      error: () => {
-        this.toast.error('Không thể cập nhật số lượng đã gửi');
-        this.updatingItem.set(null);
+      error: (err) => {
+        const msg = err?.error?.message || 'Không thể cập nhật số lượng đã gửi';
+        this.toast.error(msg);
+        this.updatingShippedItem.set(null);
       }
     });
   }
@@ -192,7 +282,16 @@ export class OrderDetailComponent implements OnInit {
     this.editProductSearchTerm.set(item.productName);
     this.editableItems.update(items => items.map(i =>
       i.id === item.id
-        ? { ...i, editing: true, editProductSearch: i.productName, editQty: i.quantity, editPrice: i.unitPrice, editProductId: i.productId, editProductName: i.productName }
+        ? {
+            ...i,
+            editing: true,
+            editProductSearch: i.productName,
+            editQty: i.quantity,
+            editPickedQty: i.pickedQuantity,
+            editPrice: i.unitPrice,
+            editProductId: i.productId,
+            editProductName: i.productName
+          }
         : i
     ));
   }
@@ -215,16 +314,43 @@ export class OrderDetailComponent implements OnInit {
 
   saveEdit(item: EditableItem) {
     this.updatingItem.set(item.id);
+    const needUpdatePicked = item.editPickedQty !== undefined && item.editPickedQty !== item.pickedQuantity;
     this.orderService.updateOrderItem(item.id, {
       productId: item.editProductId,
       quantity: item.editQty,
       unitPrice: item.editPrice
     }).subscribe({
-      next: o => {
-        this.syncFromOrder(o);
-        this.editingItemId.set(null);
-        this.updatingItem.set(null);
-        this.toast.success('Đã cập nhật sản phẩm!');
+      next: (order) => {
+        if (needUpdatePicked) {
+          const clampedPicked = Math.min(Math.max(item.editPickedQty, item.shippedQuantity), item.editQty);
+          this.orderService.updatePickedQuantity(item.id, { pickedQuantity: clampedPicked }).subscribe({
+            next: () => {
+              this.orderService.getOrderById(+this.id()).subscribe({
+                next: full => {
+                  this.syncFromOrder(full);
+                  this.editingItemId.set(null);
+                  this.updatingItem.set(null);
+                  this.toast.success('Đã cập nhật sản phẩm!');
+                },
+                error: () => {
+                  this.editingItemId.set(null);
+                  this.updatingItem.set(null);
+                }
+              });
+            },
+            error: () => {
+              this.syncFromOrder(order);
+              this.editingItemId.set(null);
+              this.updatingItem.set(null);
+              this.toast.warning('Đã cập nhật sản phẩm nhưng không thể cập nhật số lượng đã lấy');
+            }
+          });
+        } else {
+          this.syncFromOrder(order);
+          this.editingItemId.set(null);
+          this.updatingItem.set(null);
+          this.toast.success('Đã cập nhật sản phẩm!');
+        }
       },
       error: () => {
         this.toast.error('Không thể cập nhật sản phẩm');

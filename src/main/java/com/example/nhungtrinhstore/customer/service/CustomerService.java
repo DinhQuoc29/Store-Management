@@ -25,10 +25,6 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final CustomerMapper customerMapper;
 
-    // ---------------------------------------------------------------
-    // CRUD
-    // ---------------------------------------------------------------
-
     @Transactional
     public CustomerResponse create(CustomerRequest request) {
         if (request.phoneNumber() != null && !request.phoneNumber().isBlank()) {
@@ -54,7 +50,6 @@ public class CustomerService {
         return PageResponse.from(resultPage.map(customerMapper::toResponse));
     }
 
-    /** Lấy toàn bộ danh sách khách hàng (dùng cho dropdown chọn khách khi tạo đơn). */
     public List<CustomerResponse> getAll() {
         return customerRepository.findAll(Sort.by("fullName").ascending())
             .stream()
@@ -82,10 +77,6 @@ public class CustomerService {
         }
         customerRepository.deleteById(id);
     }
-
-    // ---------------------------------------------------------------
-    // Internal helper
-    // ---------------------------------------------------------------
 
     Customer findOrThrow(Long id) {
         return customerRepository.findById(id)

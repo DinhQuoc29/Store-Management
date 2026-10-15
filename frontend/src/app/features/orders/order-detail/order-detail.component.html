@@ -180,15 +180,32 @@
                     <span class="stat-val stat-val--qty">{{ item.quantity }}</span>
                   </div>
 
-                  <!-- Đã lấy -->
-                  <div class="stat-cell">
+                  <!-- Đã lấy (interactive) -->
+                  <div class="stat-cell stat-cell--pick">
                     <span class="stat-label">Đã lấy</span>
-                    <span class="stat-val"
-                          [class.stat-val--green]="item.pickedQuantity >= item.quantity"
-                          [class.stat-val--amber]="item.pickedQuantity > 0 && item.pickedQuantity < item.quantity"
-                          [class.stat-val--muted]="item.pickedQuantity === 0">
-                      {{ item.pickedQuantity }}/{{ item.quantity }}
-                    </span>
+                    <div class="ship-row">
+                      <button class="ship-btn ship-btn--minus"
+                              (click)="decreasePicked(item)"
+                              [disabled]="item.pickedQuantity <= 0 || item.pickedQuantity <= item.shippedQuantity || updatingPickedItem() === item.id || updatingItem() === item.id"
+                              title="Giảm 1">−</button>
+                      <button class="ship-val ship-val--btn"
+                              (click)="quickSetPicked(item)"
+                              [disabled]="updatingPickedItem() === item.id || updatingItem() === item.id"
+                              title="Bấm để nhập số lượng đã lấy"
+                              [class.stat-val--green]="item.pickedQuantity >= item.quantity"
+                              [class.stat-val--amber]="item.pickedQuantity > 0 && item.pickedQuantity < item.quantity"
+                              [class.stat-val--muted]="item.pickedQuantity === 0">
+                        @if (updatingPickedItem() === item.id) {
+                          <span class="spinner spinner--xs spinner--blue"></span>
+                        } @else {
+                          {{ item.pickedQuantity }}/{{ item.quantity }}
+                        }
+                      </button>
+                      <button class="ship-btn ship-btn--plus"
+                              (click)="increasePicked(item)"
+                              [disabled]="item.pickedQuantity >= item.quantity || updatingPickedItem() === item.id || updatingItem() === item.id"
+                              title="Tăng 1">+</button>
+                    </div>
                   </div>
 
                   <!-- Đã gửi (interactive) -->
@@ -197,20 +214,25 @@
                     <div class="ship-row">
                       <button class="ship-btn ship-btn--minus"
                               (click)="decreaseShipped(item)"
-                              [disabled]="item.shippedQuantity <= 0 || updatingItem() === item.id">−</button>
-                      <span class="ship-val"
-                            [class.stat-val--green]="item.shippedQuantity >= item.pickedQuantity && item.pickedQuantity > 0"
-                            [class.stat-val--amber]="item.shippedQuantity > 0 && item.shippedQuantity < item.pickedQuantity"
-                            [class.stat-val--muted]="item.shippedQuantity === 0">
-                        @if (updatingItem() === item.id) {
+                              [disabled]="item.shippedQuantity <= 0 || updatingShippedItem() === item.id || updatingItem() === item.id"
+                              title="Giảm 1">−</button>
+                      <button class="ship-val ship-val--btn"
+                              (click)="quickSetShipped(item)"
+                              [disabled]="updatingShippedItem() === item.id || updatingItem() === item.id"
+                              title="Bấm để nhập số lượng đã gửi"
+                              [class.stat-val--green]="item.shippedQuantity >= item.pickedQuantity && item.pickedQuantity > 0"
+                              [class.stat-val--amber]="item.shippedQuantity > 0 && item.shippedQuantity < item.pickedQuantity"
+                              [class.stat-val--muted]="item.shippedQuantity === 0">
+                        @if (updatingShippedItem() === item.id) {
                           <span class="spinner spinner--xs spinner--blue"></span>
                         } @else {
                           {{ item.shippedQuantity }}/{{ item.pickedQuantity }}
                         }
-                      </span>
+                      </button>
                       <button class="ship-btn ship-btn--plus"
                               (click)="increaseShipped(item)"
-                              [disabled]="item.shippedQuantity >= item.pickedQuantity || updatingItem() === item.id">+</button>
+                              [disabled]="item.shippedQuantity >= item.pickedQuantity || updatingShippedItem() === item.id || updatingItem() === item.id"
+                              title="Tăng 1">+</button>
                     </div>
                   </div>
                 </div>
@@ -253,13 +275,23 @@
 
                   <div class="edit-controls">
                     <div class="field-group">
-                      <label class="field-label">Số lượng</label>
+                      <label class="field-label">Số lượng đặt</label>
                       <div class="qty-control">
-                        <button class="qty-btn" (click)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editQty: Math.max(1, i.editQty-1)} : i))">−</button>
+                        <button class="qty-btn" (click)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editQty: Math.max(1, i.editQty-1), editPickedQty: Math.min(Math.max(1, i.editQty-1), i.editPickedQty)} : i))">−</button>
                         <input class="qty-input" type="number" min="1"
                           [ngModel]="item.editQty"
-                          (ngModelChange)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editQty: +$event} : i))" />
+                          (ngModelChange)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editQty: +$event, editPickedQty: Math.min(+$event, i.editPickedQty)} : i))" />
                         <button class="qty-btn" (click)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editQty: i.editQty+1} : i))">+</button>
+                      </div>
+                    </div>
+                    <div class="field-group">
+                      <label class="field-label">SL đã lấy</label>
+                      <div class="qty-control">
+                        <button class="qty-btn" (click)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editPickedQty: Math.max(i.shippedQuantity, i.editPickedQty-1)} : i))">−</button>
+                        <input class="qty-input" type="number" [min]="item.shippedQuantity" [max]="item.editQty"
+                          [ngModel]="item.editPickedQty"
+                          (ngModelChange)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editPickedQty: +$event} : i))" />
+                        <button class="qty-btn" (click)="editableItems.update(items => items.map(i => i.id === item.id ? {...i, editPickedQty: Math.min(i.editQty, i.editPickedQty+1)} : i))">+</button>
                       </div>
                     </div>
                     <div class="field-group">

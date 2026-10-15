@@ -38,9 +38,6 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final OrderMapper orderMapper;
 
-    // ================================================================
-    // CREATE
-    // ================================================================
 
     @Transactional
     public OrderResponse createOrder(OrderRequest request) {
@@ -168,6 +165,13 @@ public class OrderService {
         }
 
         // Cáº­p nháº­t trá»±c tiáº¿p qua JPQL UPDATE (khĂ´ng load cáº£ collection)
+        if (newPicked < item.getShippedQuantity()) {
+            throw new BusinessException(
+                "Số lượng đã lấy (%d) không được nhỏ hơn số lượng đã gửi (%d) cho sản phẩm '%s'"
+                    .formatted(newPicked, item.getShippedQuantity(), item.getProduct().getProductName())
+            );
+        }
+
         orderItemRepository.updatePickedQuantity(orderItemId, newPicked);
         item.setPickedQuantity(newPicked);
 

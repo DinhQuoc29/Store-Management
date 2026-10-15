@@ -12,11 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-/**
- * REST API cho quản lý Sản phẩm.
- *
- * Base URL: /api/products
- */
 @RestController
 @RequestMapping("/api/products")
 @RequiredArgsConstructor
@@ -25,13 +20,11 @@ public class ProductController {
 
     private final ProductService productService;
 
-    /** POST /api/products — Tạo mới sản phẩm. */
     @PostMapping
     public ResponseEntity<ProductResponse> create(@Valid @RequestBody ProductRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(productService.create(request));
     }
 
-    /** GET /api/products/{id} — Lấy thông tin một sản phẩm. */
     @GetMapping("/{id}")
     public ResponseEntity<ProductResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.getById(id));

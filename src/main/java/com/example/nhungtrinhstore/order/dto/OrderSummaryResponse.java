@@ -7,10 +7,6 @@ import com.example.nhungtrinhstore.order.enums.ShippingStatus;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-/**
- * DTO dùng cho danh sách đơn hàng (list view).
- * Không bao gồm danh sách items để tối ưu performance khi load nhiều đơn.
- */
 public record OrderSummaryResponse(
     Long id,
     Long customerId,

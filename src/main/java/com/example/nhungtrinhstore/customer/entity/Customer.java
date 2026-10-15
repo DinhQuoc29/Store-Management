@@ -28,7 +28,6 @@ public class Customer {
     @Column(name = "full_name", nullable = false, length = 150)
     private String fullName;
 
-    /** Link trang Facebook cá nhân, dùng để liên hệ & nhận đơn qua mạng xã hội. */
     @Column(name = "facebook_url", length = 500)
     private String facebookUrl;
 
@@ -42,9 +41,6 @@ public class Customer {
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
-    // ---------------------------------------------------------------
-    // Relationships
-    // ---------------------------------------------------------------
     @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     @Builder.Default
     private List<com.example.nhungtrinhstore.order.entity.Order> orders = new ArrayList<>();

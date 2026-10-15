@@ -6,10 +6,6 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-/**
- * Request body cho PATCH /api/orders/items/{id}
- * Cập nhật thông tin một dòng sản phẩm (sản phẩm, số lượng, đơn giá).
- */
 public record UpdateOrderItemRequest(
     @NotNull(message = "ID sản phẩm không được để trống")
     Long productId,

@@ -2,9 +2,6 @@ package com.example.nhungtrinhstore.order.dto;
 
 import java.math.BigDecimal;
 
-/**
- * DTO trả về thông tin chi tiết từng dòng đơn hàng.
- */
 public record OrderItemResponse(
     Long id,
     Long productId,

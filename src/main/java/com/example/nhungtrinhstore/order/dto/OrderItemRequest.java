@@ -6,9 +6,6 @@ import jakarta.validation.constraints.Positive;
 
 import java.math.BigDecimal;
 
-/**
- * DTO cho một dòng sản phẩm trong đơn hàng (khi tạo mới hoặc cập nhật).
- */
 public record OrderItemRequest(
 
     @NotNull(message = "ID sản phẩm không được để trống")

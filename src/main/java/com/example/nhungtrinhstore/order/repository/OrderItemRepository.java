@@ -13,9 +13,6 @@ import java.util.Optional;
 @Repository
 public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
 
-    /**
-     * Lấy OrderItem kèm Product và Order (cùng Customer) để cập nhật picked_quantity / shipped_quantity.
-     */
     @Query("""
         SELECT oi FROM OrderItem oi
         JOIN FETCH oi.order o
@@ -25,11 +22,6 @@ public interface OrderItemRepository extends JpaRepository<OrderItem, Long> {
         """)
     Optional<OrderItem> findByIdWithOrderAndProduct(@Param("id") Long id);
 
-    /**
-     * ========================================================
-     *  PICKUP SCREEN — Query chuyên biệt cho màn hình gom hàng
-     * ========================================================
-     */
     @Query("""
         SELECT oi FROM OrderItem oi
         JOIN FETCH oi.product p

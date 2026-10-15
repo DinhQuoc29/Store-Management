@@ -9,9 +9,6 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
-/**
- * DTO trả về thông tin đầy đủ của một đơn hàng, bao gồm danh sách sản phẩm.
- */
 public record OrderResponse(
     Long id,
 
